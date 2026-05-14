@@ -36,10 +36,19 @@ def patch_launcher(file_path):
         # 2. Remove noscript fallback for Google Fonts
         content = re.sub(r'<noscript>.*?fonts\.googleapis\.com.*?</noscript>', '', content, flags=re.DOTALL)
 
-        # 3. Inject local font link before the first <style> tag
+        # 3. Inject local font link and styling fixes
         local_font_link = '<link rel="stylesheet" href="vollkorn.css">'
+        style_fixes = """
+  <style>
+    /* Lithic ESP32 UI Fixes */
+    h1 { font-weight: 400 !important; } 
+    h1 div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    @media (max-width: 600px) { h1 { font-size: 1.25rem !important; } }
+"""
         if local_font_link not in content:
-            content = content.replace('<style>', f'{local_font_link}\n  <style>', 1)
+            # We replace the first <style> tag with our link and our custom fixes
+            content = content.replace('<style>', f'{local_font_link}\n{style_fixes}', 1)
+
 
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(content)
