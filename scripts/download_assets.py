@@ -37,7 +37,7 @@ def patch_launcher(file_path):
         content = re.sub(r'<noscript>.*?fonts\.googleapis\.com.*?</noscript>', '', content, flags=re.DOTALL)
 
         # 3. Inject local font link and styling fixes
-        local_font_link = '<link rel="stylesheet" href="vollkorn.css">'
+        local_font_link = '<link rel="stylesheet" href="/src/vollkorn.css">'
         style_fixes = """
   <style>
     /* Lithic ESP32 UI Fixes */
@@ -48,6 +48,7 @@ def patch_launcher(file_path):
         if local_font_link not in content:
             # We replace the first <style> tag with our link and our custom fixes
             content = content.replace('<style>', f'{local_font_link}\n{style_fixes}', 1)
+
 
 
         with open(file_path, "w", encoding="utf-8") as f:

@@ -3,8 +3,12 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
+#include <esp_task_wdt.h>
 
 // --- Configuration ---
+#define WDT_TIMEOUT_SECONDS 15
+#define MIN_FREE_HEAP 30000 // 30KB safety margin
+
 const byte DNS_PORT = 53;
 IPAddress apIP(192, 168, 4, 1);
 const char* apPassword = "lithic123"; 
@@ -173,6 +177,12 @@ void setup() {
     server.addHandler(new CaptiveRequestHandler()).setFilter(ON_AP_FILTER);
     server.addHandler(new SyncFileHandler());
 
+    // --- Task Watchdog (Legacy API) ---
+    esp_task_wdt_init(WDT_TIMEOUT_SECONDS, true);
+    esp_task_wdt_add(NULL); 
+
+
+
     // --- Core UI Routes ---
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
         request->redirect("/src/launcher.html?v=" + String(UI_VERSION));
@@ -290,4 +300,17 @@ void setup() {
 
 void loop() {
     dnsServer.processNextRequest();
-}
+    esp_task_wdt_reset(); // "Kick the dog" to prevent reboot
+
+    // --- Self-Healing: Memory Check ---
+    static unsigned long lastMemCheck = 0;
+    if (millis() - lastMemCheck > 5000) {
+        lastMemCheck = millis();
+        uint32_t freeHeap = ESP.getFreeHeap();
+        if (freeHeap < MIN_FREE_HEAP) {
+            Serial.printf("CRITICAL: Low Memory (%u). Rebooting for stability...\n", freeHeap);
+            delay(500);
+            ESP.restart();
+        }
+    }
+}
