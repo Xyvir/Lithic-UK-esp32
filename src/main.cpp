@@ -9,6 +9,7 @@ const byte DNS_PORT = 53;
 IPAddress apIP(192, 168, 4, 1);
 const char* apPassword = "lithic123"; 
 DNSServer dnsServer;
+const char* UI_VERSION = "1.0.0"; // Increment this to force a cache refresh
 AsyncWebServer server(80);
 
 // --- Dynamic SSID Generation ---
@@ -174,17 +175,24 @@ void setup() {
 
     // --- Core UI Routes ---
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(LittleFS, "/src/launcher.html", "text/html");
+        request->redirect("/src/launcher.html?v=" + String(UI_VERSION));
     });
     server.on("/src/launcher.html", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(LittleFS, "/src/launcher.html", "text/html");
+        AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/src/launcher.html", "text/html");
+        response->addHeader("Cache-Control", "public, max-age=31536000"); // 1 year
+        request->send(response);
     });
     server.on("/src/lithic.html", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(LittleFS, "/src/lithic.html", "text/html");
+        AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/src/lithic.html", "text/html");
+        response->addHeader("Cache-Control", "public, max-age=31536000");
+        request->send(response);
     });
     server.on("/src/vollkorn.css", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(LittleFS, "/src/vollkorn.css", "text/css");
+        AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/src/vollkorn.css", "text/css");
+        response->addHeader("Cache-Control", "public, max-age=31536000");
+        request->send(response);
     });
+
 
 
     // --- Captive Portal Traps (Android, Windows, Apple) ---
