@@ -11,10 +11,13 @@
 
 const byte DNS_PORT = 53;
 IPAddress apIP(192, 168, 4, 1);
-const char* apPassword = "lithic123"; 
 DNSServer dnsServer;
 const char* UI_VERSION = "1.0.0"; // Increment this to force a cache refresh
 AsyncWebServer server(80);
+
+// --- WiFi Config (loaded from /config.txt at boot) ---
+String cfgSSID = "";
+String cfgPassword = "lithic123";
 
 // --- Dynamic SSID Generation ---
 String getDynamicSSID() {
@@ -23,6 +26,35 @@ String getDynamicSSID() {
     char ssid[25];
     snprintf(ssid, 25, "Lithic_%04X", chip);
     return String(ssid);
+}
+
+// --- Load WiFi Config from LittleFS ---
+void loadConfig() {
+    File f = LittleFS.open("/config.txt", "r");
+    if (!f) {
+        Serial.println("[CONFIG] No /config.txt found, using defaults.");
+        return;
+    }
+    Serial.println("[CONFIG] Reading /config.txt...");
+    while (f.available()) {
+        String line = f.readStringUntil('\n');
+        line.trim();
+        if (line.length() == 0 || line.startsWith("#")) continue; // skip blanks & comments
+        int sep = line.indexOf('=');
+        if (sep < 0) continue;
+        String key = line.substring(0, sep);
+        String val = line.substring(sep + 1);
+        key.trim();
+        val.trim();
+        if (key == "ssid" && val.length() > 0) {
+            cfgSSID = val;
+            Serial.printf("[CONFIG] SSID override: %s\n", cfgSSID.c_str());
+        } else if (key == "pass" && val.length() > 0) {
+            cfgPassword = val;
+            Serial.println("[CONFIG] Password override loaded.");
+        }
+    }
+    f.close();
 }
 
 // --- CORS Helper ---
@@ -166,10 +198,13 @@ void setup() {
     LittleFS.mkdir("/src");
 
 
-    String currentSSID = getDynamicSSID();
+    loadConfig();
+
+    String currentSSID = cfgSSID.length() > 0 ? cfgSSID : getDynamicSSID();
     WiFi.mode(WIFI_AP);
     WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
-    WiFi.softAP(currentSSID.c_str(), apPassword);
+    WiFi.softAP(currentSSID.c_str(), cfgPassword.c_str());
+    Serial.printf("[WIFI] AP started: %s\n", currentSSID.c_str());
     
     dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
     dnsServer.start(DNS_PORT, "*", apIP);
