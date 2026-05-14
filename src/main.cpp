@@ -187,9 +187,14 @@ void setup() {
     });
 
 
-    // --- Android Traps ---
-    server.on("/generate_204", HTTP_GET, [](AsyncWebServerRequest *request){ request->redirect("http://192.168.4.1/"); });
-    server.on("/redirect", HTTP_GET, [](AsyncWebServerRequest *request){ request->redirect("http://192.168.4.1/"); });
+    // --- Captive Portal Traps (Android, Windows, Apple) ---
+    server.on("/generate_204", HTTP_GET, [](AsyncWebServerRequest *request){ request->redirect("http://192.168.4.1/"); }); // Android
+    server.on("/redirect", HTTP_GET, [](AsyncWebServerRequest *request){ request->redirect("http://192.168.4.1/"); });      // Android
+    server.on("/connecttest.txt", HTTP_GET, [](AsyncWebServerRequest *request){ request->redirect("http://192.168.4.1/"); }); // Windows 10/11
+    server.on("/ncsi.txt", HTTP_GET, [](AsyncWebServerRequest *request){ request->redirect("http://192.168.4.1/"); });        // Windows
+    server.on("/hotspot-detect.html", HTTP_GET, [](AsyncWebServerRequest *request){ request->redirect("http://192.168.4.1/"); }); // Apple
+    server.on("/library/test/success.html", HTTP_GET, [](AsyncWebServerRequest *request){ request->redirect("http://192.168.4.1/"); }); // Apple
+    server.on("/success.txt", HTTP_GET, [](AsyncWebServerRequest *request){ request->redirect("http://192.168.4.1/"); }); // Generic
 
     // --- Lithic "Phantom" Mocking ---
     server.on("/api/github/status", HTTP_GET, [](AsyncWebServerRequest *request){

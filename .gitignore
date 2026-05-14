@@ -4,8 +4,8 @@
 .vscode/
 
 # Local data / Dynamically downloaded assets
-# We exclude data/src because it is pulled from GitHub on build
 data/src/
+data/offline-service-worker.js
 
 # Exclude sync data if you want the ESP32 to start with a clean slate
 # Or keep them if you want default files to be included in the repo
