@@ -26,13 +26,30 @@ Lithic ESP32 follows a **"Software as Hardware"** philosophy. By embedding the e
 ### Installation
 1. Clone this repository.
 2. Open in PlatformIO.
-3. Run **Build** (this will download the latest UI assets from GitHub).
-4. Run **Upload Filesystem Image** (First time only - this installs the UI).
-5. Run **Upload** (Installs the firmware).
+3. *(Optional)* Create a `data/config.txt` file to customize your WiFi (see [WiFi Configuration](#-wifi-configuration) below).
+4. Run **Build** (this will download the latest UI assets from GitHub).
+5. Run **Upload Filesystem Image** (First time only — this installs the UI and config).
+6. Run **Upload** (Installs the firmware).
+
+### 📶 WiFi Configuration
+
+By default, the ESP32 creates an access point named `Lithic_XXXX` (unique per chip) with the password `lithic123`. To customize this, create a `data/config.txt` file:
+
+```
+# WiFi AP Settings
+ssid=MyLithic
+pass=mysecretpassword
+```
+
+- **`ssid`** — Custom access point name. Leave blank or omit to keep the auto-generated `Lithic_XXXX` name.
+- **`pass`** — Access point password (minimum 8 characters for WPA2).
+- Lines starting with `#` are treated as comments.
+
+This file is listed in `.gitignore` so your credentials stay local. If no `config.txt` is present, the firmware falls back to defaults.
 
 ### Updating UI Assets (Without Wiping Data)
 If you want to update the Lithic UI but keep your saved files on the ESP32:
-1. Connect to the ESP32 AP (Default: `Lithic_XXXX`).
+1. Connect to the ESP32 AP (default: `Lithic_XXXX`, or your custom SSID from `config.txt`).
 2. Run the update script:
    ```bash
    python scripts/update_esp32_assets.py
