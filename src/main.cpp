@@ -63,9 +63,13 @@ public:
 
     bool canHandle(AsyncWebServerRequest *request) const override {
         if (request->url().startsWith("/sync/") && request->url().endsWith(".lith")) return true;
-        if (request->method() == HTTP_PUT && (request->url() == "/src/launcher.html" || request->url() == "/src/lithic.html")) return true;
+        if (request->method() == HTTP_PUT) {
+            if (request->url() == "/src/launcher.html" || request->url() == "/src/lithic.html" || request->url() == "/src/vollkorn.css") return true;
+            if (request->url() == "/offline-service-worker.js") return true;
+        }
         return false;
     }
+
 
     void handleRequest(AsyncWebServerRequest *request) override {
         String filename = request->url();
@@ -178,6 +182,10 @@ void setup() {
     server.on("/src/lithic.html", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send(LittleFS, "/src/lithic.html", "text/html");
     });
+    server.on("/src/vollkorn.css", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(LittleFS, "/src/vollkorn.css", "text/css");
+    });
+
 
     // --- Android Traps ---
     server.on("/generate_204", HTTP_GET, [](AsyncWebServerRequest *request){ request->redirect("http://192.168.4.1/"); });
@@ -189,8 +197,15 @@ void setup() {
         addCorsHeaders(response);
         request->send(response);
     });
-    server.on("/manifest.json", HTTP_GET, [](AsyncWebServerRequest *request){ request->send(200, "application/json", "{}"); });
+
+    // --- PWA / Cache Assets ---
+
+    server.on("/offline-service-worker.js", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(LittleFS, "/offline-service-worker.js", "application/javascript");
+    });
+
     server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request){ request->send(204); });
+
     server.on("/mstile-150x150.png", HTTP_GET, [](AsyncWebServerRequest *request){ request->send(204); });
 
     // --- WEBDAV DIRECTORY LISTING (Manual PROPFIND Fallback) ---
